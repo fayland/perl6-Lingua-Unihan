@@ -3,24 +3,7 @@
 use v6;
 use DBIish;
 
-## build SQLite
-unlink("unihan.sqlite3") if "unihan.sqlite3".IO ~~ :e;
-my $dbh = DBIish.connect("SQLite", :database<unihan.sqlite3>, :RaiseError);
-
-my $sth = $dbh.do(q:to/STATEMENT/);
-    CREATE TABLE unihan (
-        code_point  varchar(5),
-        field_type  varchar(30),
-        value    text,
-        PRIMARY KEY (code_point, field_type)
-    )
-    STATEMENT
-
-$sth = $dbh.prepare(q:to/STATEMENT/);
-    INSERT INTO unihan (code_point, field_type, value)
-    VALUES ( ?, ?, ? )
-    STATEMENT
-
+my %sths;
 my @files = <Unihan_Readings.txt Unihan_DictionaryLikeData.txt>;
 for @files -> $file {
     my $fh = open($file, :r)
@@ -29,13 +12,31 @@ for @files -> $file {
         next if $line ~~ /^\#/; # skip comment line
         next unless $line ~~ /\w/;
         # U+3400  kMandarin       qiū
-        my @parts = $line.split(/\s+/, 3);
-        next if @parts.elems < 3;
-        $parts[0].subst(/^U\+/, '');
-        say @parts.perl;
-        $sth.execute(@parts);
+        my ($code_point, $field_type, $value) = $line.split(/\s+/, 3);
+        next unless $value;
+
+        unless %sths{$field_type}:exists {
+            ## build SQLite
+            my $sqlite_file = "unihan_$field_type.sqlite3";
+            unlink($sqlite_file) if $sqlite_file.IO ~~ :e;
+            my $dbh = DBIish.connect("SQLite", database => $sqlite_file, :RaiseError);
+
+            $dbh.do(q:to/STATEMENT/);
+                CREATE TABLE unihan (
+                    code_point  varchar(5) PRIMARY KEY,
+                    value    text
+                )
+                STATEMENT
+
+            %sths{$field_type} = $dbh.prepare(q:to/STATEMENT/);
+                INSERT INTO unihan (code_point, value)
+                VALUES ( ?, ? )
+                STATEMENT
+        }
+
+        $code_point = $code_point.subst(/^U\+/, '');
+        say ($code_point, $field_type, $value).perl;
+        %sths{$field_type}.execute($code_point, $value);
     }
 }
 
-$sth.finish;
-$dbh.disconnect;
