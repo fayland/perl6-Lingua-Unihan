@@ -2,7 +2,7 @@
     "name"          : "Lingua::Unihan",
     "version"       : "0.1.0",
     "description"   : "Perl6 reader (SQLite) for unihan database",
-    "depends"       : [ "DBIish" ],
+    "depends"       : [ "DBIish", "Encode" ],
     "provides" : {
         "Lingua::Unihan"    : "lib/Lingua/Unihan.pm6"
     },
