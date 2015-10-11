@@ -30,3 +30,20 @@ sub unihan_query($field_type, $text) is export {
 sub unihan_codepoint($text) is export {
     return sprintf("%04x", ord Encode::decode('utf-8', buf8.new($text.encode)));
 }
+
+=begin pod
+
+=head NAME
+
+Lingua::Unihan - reader (SQLite) for unihan database
+
+=head SYNOPSIS
+
+    use Lingua::Unihan;
+
+    my $codepoint = unihan_codepoint('你'); # 4f60
+
+    my $mandarin = unihan_query('kMandarin', '林'); # 'lín'
+    my $strokes  = unihan_query('kTotalStrokes', '林'); # 8
+
+=end pod
