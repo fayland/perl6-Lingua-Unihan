@@ -1,6 +1,7 @@
 {
     "name"          : "Lingua::Unihan",
     "version"       : "0.1.0",
+    "author"        : "github:fayland",
     "description"   : "Perl6 reader (SQLite) for unihan database",
     "depends"       : [ "DBIish", "Encode" ],
     "provides" : {
